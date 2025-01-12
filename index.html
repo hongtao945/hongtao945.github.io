@@ -240,6 +240,138 @@
     <article class="col-12 col-md-12 mx-auto index-info">
       <h2 class="index-header">
         
+        <a href="/2025/01/11/Redis%E7%9A%845%E7%A7%8D%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%B1%BB%E5%9E%8B/" target="_self">
+          
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/01/11/Redis%E7%9A%845%E7%A7%8D%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%B1%BB%E5%9E%8B/" target="_self">
+        <div>
+          String String最基本的编码方式是RAW，即简单动态字符串SDS。存储上限为512MB 如果存储的SDS长度小于44字节，则会采用EMBSTR编码，此时object head与SDS是一段连续空间。申请内存时只需要调用一次内存分配函数，效率更高。    如果存储的字符串是整数值，并且大小在LONG_MAX范围内，则会采用INT编码:直接将数据保存在RedisObject的ptr指针位置(
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-01-11 15:33" pubdate>
+              2025-01-11
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/01/10/Redis%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" target="_self">
+          
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/01/10/Redis%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" target="_self">
+        <div>
+          用户空间和内核空间
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-01-10 22:32" pubdate>
+              2025-01-10
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/01/10/Redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" target="_self">
+          
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/01/10/Redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" target="_self">
+        <div>
+          动态字符串SDSRedis虽然是使用C语言实现的，但它并没有直接使用C语言的字符串。因为C语言的字符串存在以下问题：  获取字符串长度需要遍历整个字符串，时间复杂度为O(n)。 C语言的字符串是以’\0’结尾的，不能存储’\0’字符，所以是非二进制安全的。 不可修改，修改字符串需要重新分配内存。// 本质其实是字符数组，保存的内容为: &#123;'h', 'e', 'l', 'l', 'o',
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-01-10 20:31" pubdate>
+              2025-01-10
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2025/01/09/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" target="_self">
+          
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2025/01/09/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" target="_self">
+        <div>
+          1. 使用Redis实现分布式锁为什么使用Redis实现分布式锁？ Redis是高性能的内存数据库，满足高并发的需求。 Redis支持原子性操作，能保证操作的原子性和一致性。 Redis支持集群部署，支持多节点间数据同步和复制，实现了高可用和高容错。  使用Redis的setnx命令实现分布式锁的原理setnx命令是Redis的一个原子性操作命令，用于设置一个key-value键值对，如果key不
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2025-01-09 15:14" pubdate>
+              2025-01-09
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h2 class="index-header">
+        
         <a href="/2024/12/28/hello-world/" target="_self">
           Hello World
         </a>

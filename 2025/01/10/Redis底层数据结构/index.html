@@ -1,0 +1,823 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="动态字符串SDSRedis虽然是使用C语言实现的，但它并没有直接使用C语言的字符串。因为C语言的字符串存在以下问题：  获取字符串长度需要遍历整个字符串，时间复杂度为O(n)。 C语言的字符串是以’\0’结尾的，不能存储’\0’字符，所以是非二进制安全的。 不可修改，修改字符串需要重新分配内存。&#x2F;&#x2F; 本质其实是字符数组，保存的内容为: &#123;&#39;h&#39;, &#39;e&#39;, &#39;l&#39;, &#39;l&#39;, &#39;o&#39;,">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="https://hongtao945.github.io/2025/01/10/Redis%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="动态字符串SDSRedis虽然是使用C语言实现的，但它并没有直接使用C语言的字符串。因为C语言的字符串存在以下问题：  获取字符串长度需要遍历整个字符串，时间复杂度为O(n)。 C语言的字符串是以’\0’结尾的，不能存储’\0’字符，所以是非二进制安全的。 不可修改，修改字符串需要重新分配内存。&#x2F;&#x2F; 本质其实是字符数组，保存的内容为: &#123;&#39;h&#39;, &#39;e&#39;, &#39;l&#39;, &#39;l&#39;, &#39;o&#39;,">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://gitee.com/hongtao945/imgs/raw/master/image-20250110204912483.png">
+<meta property="og:image" content="https://gitee.com/hongtao945/imgs/raw/master/image-20250110205248229.png">
+<meta property="og:image" content="https://gitee.com/hongtao945/imgs/raw/master/image-20250110205932201.png">
+<meta property="og:image" content="https://gitee.com/hongtao945/imgs/raw/master/image-20250110211039688.png">
+<meta property="og:image" content="https://gitee.com/hongtao945/imgs/raw/master/image-20250110213122117.png">
+<meta property="og:image" content="https://gitee.com/hongtao945/imgs/raw/master/image-20250110213729952.png">
+<meta property="og:image" content="https://gitee.com/hongtao945/imgs/raw/master/image-20250110214020157.png">
+<meta property="og:image" content="https://gitee.com/hongtao945/imgs/raw/master/image-20250110214430144.png">
+<meta property="og:image" content="https://gitee.com/hongtao945/imgs/raw/master/image-20250111150021442.png">
+<meta property="og:image" content="https://gitee.com/hongtao945/imgs/raw/master/image-20250111150244880.png">
+<meta property="og:image" content="https://gitee.com/hongtao945/imgs/raw/master/image-20250111151104786.png">
+<meta property="og:image" content="https://gitee.com/hongtao945/imgs/raw/master/image-20250111151312545.png">
+<meta property="og:image" content="https://gitee.com/hongtao945/imgs/raw/master/image-20250111151936502.png">
+<meta property="og:image" content="https://gitee.com/hongtao945/imgs/raw/master/image-20250111152132748.png">
+<meta property="article:published_time" content="2025-01-10T12:31:35.328Z">
+<meta property="article:modified_time" content="2025-01-11T07:34:34.876Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://gitee.com/hongtao945/imgs/raw/master/image-20250110204912483.png">
+  
+  
+  
+  <title>Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"hongtao945.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":true,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":"4hVT8RNhnDmZAFEhSG5hHR4i-gzGzoHsz","app_key":"BgZUf3FJ73PjwbHhOIr9z6Qe","server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+  
+
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Fluid</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text=""></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-01-10 20:31" pubdate>
+          2025年1月10日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.6k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          22 分钟
+        
+      </span>
+    
+
+    
+    
+      
+        <span id="leancloud-page-views-container" class="post-meta" style="display: none">
+          <i class="iconfont icon-eye" aria-hidden="true"></i>
+          本文总阅读量 <span id="leancloud-page-views"></span> 次
+        </span>
+        
+      
+      
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header"></h1>
+            
+              <p id="updated-time" class="note note-info" style="display: none">
+                
+                  
+                    本文最后更新于 2025-01-11T15:34:34+08:00
+                  
+                  
+
+                
+              </p>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="动态字符串SDS"><a href="#动态字符串SDS" class="headerlink" title="动态字符串SDS"></a>动态字符串SDS</h2><p>Redis虽然是使用C语言实现的，但它并没有直接使用C语言的字符串。因为C语言的字符串存在以下问题：</p>
+<ol>
+<li>获取字符串长度需要遍历整个字符串，时间复杂度为O(n)。</li>
+<li>C语言的字符串是以’\0’结尾的，不能存储’\0’字符，所以是非二进制安全的。</li>
+<li>不可修改，修改字符串需要重新分配内存。<figure><div class="code-wrapper"><pre class="line-numbers language-c" data-language="c"><code class="language-c"><span class="token comment">// 本质其实是字符数组，保存的内容为: &#123;'h', 'e', 'l', 'l', 'o', '\0'&#125;</span>
+<span class="token keyword">char</span> <span class="token operator">*</span>s <span class="token operator">=</span> <span class="token string">"hello"</span><span class="token punctuation">;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre></div></figure>
+String类型底层使用的是<strong>简单动态字符串</strong>SDS，SDS是Redis自己实现的字符串类型，相比C语言的字符串更加安全。<br>SDS是一个结构体，结构如下：</li>
+</ol>
+<p><img src="https://gitee.com/hongtao945/imgs/raw/master/image-20250110204912483.png" srcset="/img/loading.gif" lazyload alt="image-20250110204912483"></p>
+<p>SDS是具有动态扩容能力的，例如一个内容为”hi”的SDS:</p>
+<p><img src="https://gitee.com/hongtao945/imgs/raw/master/image-20250110205248229.png" srcset="/img/loading.gif" lazyload alt="image-20250110205248229"><br>动态字符串相比于C语言的字符串有以下优点：</p>
+<ol>
+<li>获取字符串长度的时间复杂度为O(1)。</li>
+<li>二进制安全，可以存储’\0’字符。</li>
+<li>支持动态扩容。</li>
+<li>减少内存分配次数(每次申请都会多预留一些空间，减少内存分配次数)。</li>
+</ol>
+<h2 id="IntSet"><a href="#IntSet" class="headerlink" title="IntSet"></a>IntSet</h2><p>IntSet是Redis中<strong>set集合</strong>的一种实现方式，基于<strong>整数数组</strong>来实现，并且具备长度可变、有序特征。<br>IntSet的结构如下：</p>
+<p><img src="https://gitee.com/hongtao945/imgs/raw/master/image-20250110205932201.png" srcset="/img/loading.gif" lazyload alt="image-20250110205932201"></p>
+<p>这里需要对contents做一些解释：contents用于保存实际的数据，这个数组的总长度实际是<code>encoding * length</code>，其中encoding表示数组中元素的类型，有三种类型：INTSET_ENC_INT16表示每个元素用2个字节存储，INTSET_ENC_INT32表示每个元素用4个字节存储，INTSET_ENC_INT64表示每个元素用8个字节存储。<br>而且，IntSet可能会随着数据的添加而改变它的数据编码：</p>
+<ul>
+<li>最开始，新创建的intset使用占内存最小的INTSET_ENC_INT16（值为2）作为数据编码。</li>
+<li>每添加一个新元素，则根据元素大小决定是否对数据编码进行升级。</li>
+</ul>
+<p>为了方便查找，Redis会将IntSet中的数据按照升序保存在contents数组中，如下面这个例子：</p>
+<p><img src="https://gitee.com/hongtao945/imgs/raw/master/image-20250110211039688.png" srcset="/img/loading.gif" lazyload alt="IntSet内存结构图"></p>
+<p>在IntSet升级的过程中，会按照<strong>倒序</strong>的方式将原来的数据拷贝到扩容后的正确位置，倒序的原因是为了避免数据覆盖的问题。</p>
+<p>总结: IntSet可以看做是特殊的整数数组，具备以下特点:</p>
+<ul>
+<li>Redis会确保Intset中的元素唯一、有序</li>
+<li>具备类型升级机制，可以节省内存空间</li>
+<li>底层采用二分查找方式来查询</li>
+</ul>
+<h2 id="Dict"><a href="#Dict" class="headerlink" title="Dict"></a>Dict</h2><p>Dict是Redis中<strong>字典</strong>的一种实现方式，基于<strong>哈希表</strong>来实现，哈希表是一种用于存储键值对的数据结构，可以快速的查找、插入、删除键值对。<br>Dict由三部分组成：哈希表(DictHashTable)、哈希节点(DictEntry)、字典(Dict)<br>结构体定义如下：</p>
+<p><img src="https://gitee.com/hongtao945/imgs/raw/master/image-20250110213122117.png" srcset="/img/loading.gif" lazyload alt="哈希表和哈希节点的结构体定义"></p>
+<p>当向哈希表中添加一个键值对时，Redis会根据key计算出一个哈希值h，然后根据h &amp; sizemask计算出一个索引值，将键值对插入到哈希表的索引位置。如果插入的位置已经有数据了，那么就会发生<strong>哈希冲突</strong>，Redis会采用<strong>链地址法</strong>来解决冲突，即将新的键值对插入到链表的头部。如下图所示：</p>
+<p><img src="https://gitee.com/hongtao945/imgs/raw/master/image-20250110213729952.png" srcset="/img/loading.gif" lazyload alt="哈希表示意图"></p>
+<p>前文提到Dict有三部分，剩下的Dict的结构如下：</p>
+<p><img src="https://gitee.com/hongtao945/imgs/raw/master/image-20250110214020157.png" srcset="/img/loading.gif" lazyload alt="dict结构体示意图"><br>对于ht[0]和ht[1]，Redis采用<strong>渐进式rehash</strong>的方式来进行扩容，即在扩容的过程中，会同时维护两个哈希表，当需要对ht[0]进行扩容时，会将ht[0]中的数据慢慢迁移到ht[1]中，迁移完成后，再释放ht[0]的内存。一般我们使用的是ht[0], ht[1]一般都是空的。</p>
+<p>整体的结构如下：</p>
+<p><img src="https://gitee.com/hongtao945/imgs/raw/master/image-20250110214430144.png" srcset="/img/loading.gif" lazyload alt="Dic的结构示意图"></p>
+<h3 id="Dict的rehash"><a href="#Dict的rehash" class="headerlink" title="Dict的rehash"></a>Dict的rehash</h3><p>Dict中的HashTable就是数组结合单向链表的实现，当集合中元素较多时，必然导致哈希冲突增多，链表过长，则查询效率会大大降低。<br>Dict每次新增键值对的时候都会检查负载因子(LoadFactor &#x3D; dict-&gt;used &#x2F; dict-&gt;size)，满足以下两个条件之一时，就会触发rehash操作进行扩容：</p>
+<ol>
+<li>哈希表的 LoadFactor&gt;&#x3D;1。并且服务器没有执行 BGSAVE 或者 BGREWRITEAOF 等后台进程;</li>
+<li>哈希表的 LoadFactor&gt;5;<br>扩容后的大小为2^n^，2^n^是大于等于dict-&gt;used的最小值，扩容后会重新计算每个键值对的索引值，然后将其插入到新的哈希表中。</li>
+</ol>
+<p>Dict除了扩容以外，还会在删除键值对的时候检查负载因子，如果LoadFactor&lt;0.1，则会触发rehash操作进行缩容。</p>
+<p>不管是扩容还是收缩，必定会创建新的哈希表，导致哈希表的size和sizemask变化，而kev的查询与sizemask有关。因此必须对哈希表中的每一个key重新计算索引，插入新的哈希表，这个过程称为rehash。过程是这样的:</p>
+<ul>
+<li>计算新hash表的realSize，值取决于当前要做的是扩容还是收缩：<ul>
+<li>如果是扩容，则新size为第一个大于等于dict.ht[0].used+1的2^n^</li>
+<li>如果是收缩，则新size为第一个大于等于dict.ht[0].used的2^n^(不得小于4)</li>
+</ul>
+</li>
+<li>按照新的realeSize申请内存空间，创建dictht，并赋值给dict.ht[1]</li>
+<li>设置dict.rehashidx&#x3D;0，标示开始rehash</li>
+<li>每次执行新增、查询、修改、删除操作时，都检查一下dict.rehashidx是否大于-1，如果是则将dict.ht[0].table[rehashidx]的entry链表rehash到dict.ht[1]，并且将rehashidx++。直到dict.ht[0]的所有数据都rehash到dict.ht[1]</li>
+<li>将dict.ht[1]赋值给dict.ht[0]，给dict.ht[1]初始化为空哈希表，释放原来的dict.ht[0]的内存</li>
+<li>将rehashidx赋值为-1，代表rehash结束</li>
+<li>在rehash过程中，新增操作，则直接写入ht[1]，查询、修改和删除则会在dict.ht[0]和dict.ht[1]依次查找并执行。这样可以确保ht[0]的数据只减不增，随着rehash最终为空</li>
+</ul>
+<h2 id="ZipList-压缩列表"><a href="#ZipList-压缩列表" class="headerlink" title="ZipList(压缩列表)"></a>ZipList(压缩列表)</h2><p>ZipList是Redis中<strong>列表</strong>和<strong>哈希</strong>的一种实现方式，基于<strong>连续内存</strong>来实现，ZipList是一种特殊的列表，可以存储多个元素，且每个元素的长度不固定，不会像普通的链表那样存储指针，从而节省内存空间。ZipList可以在任意一端进行插入、删除操作，时间复杂度为O(1)。</p>
+<p>特性：<br>压缩列表的可以看做一种连续内存空间的”双向链表”，但是列表的节点之间不是通过指针连接，而是记录上一节点和本节点长度来寻址，因此内存占用较低。<br>如果列表数据过多，导致链表过长，可能影响查询性能。而且增或删较大数据时有可能发生连续更新问题。</p>
+<h2 id="QuickList"><a href="#QuickList" class="headerlink" title="QuickList"></a>QuickList</h2><p>问题1:ZipList虽然节省内存，但申请内存必须是连续空间，如果内存占用较多，申请内存效率很低。怎么办?<br>为了缓解这个问题，我们必须限制ZipList的长度和entry大小。<br>问题2:但是我们要存储大量数据，超出了ZipList最佳的上限该怎么办?<br>我们可以创建多个ZipList来分片存储数据。<br>问题3:数据拆分后比较分散，不方便管理和查找，这多个ZipList如何建立联系?<br>Redis在3.2版本引入了新的数据结构QuickList，它是一个双端链表，只不过链表中的每个节点都是一个ZipList。</p>
+<p>QuickList是Redis中<strong>列表</strong>的一种实现方式，基于<strong>双向链表</strong>和<strong>压缩列表</strong>来实现，QuickList是一个双向链表的数组，每个节点都是一个压缩列表。</p>
+<p>为了避免QuickList中的每个ZipList中entry过多，Redis提供了一个配置项:<code>list-max-ziplist-size</code>来限制。如果值为正，则代表ZipList的允许的entry个数的最大值<br>如果值为负，则代表ZipList的最大内存大小，分5种情况:<br>① -1:每个ZipList的内存占用不能超过4kb<br>② -2:每个ZipList的内存占用不能超过8kb<br>③ -3:每个ZipList的内存占用不能超过16kb<br>④ -4:每个ZipList的内存占用不能超过32kb<br>⑤ -5:每个ZipList的内存占用不能超过64kb<br>其默认值为 -2</p>
+<p>除了控制ZipList的大小，QuickList还可以对节点的ZipList做压缩。通过配置项list-compress-depth来控制。因为链表一般都是从首尾访问较多，所以首尾是不压缩的。这个参数是控制首尾不压缩的节点个数:</p>
+<ul>
+<li>0:特殊值，代表不压缩</li>
+<li>1:标示QuickList的首尾各有1个节点不压缩，中间节点压缩</li>
+<li>2:标示QuickList的首尾各有2个节点不压缩，中间节点压缩</li>
+<li>以此类推<br>默认值为 0</li>
+</ul>
+<p>QuickList的结构体如下：</p>
+<p><img src="https://gitee.com/hongtao945/imgs/raw/master/image-20250111150021442.png" srcset="/img/loading.gif" lazyload alt="quickList和quickListNode结构体"></p>
+<p>QuickList的结构如下：</p>
+<p><img src="https://gitee.com/hongtao945/imgs/raw/master/image-20250111150244880.png" srcset="/img/loading.gif" lazyload alt="QuickList结构图"></p>
+<p>compress设置为1，因此首位节点不压缩，中间节点压缩。压缩完以后肉眼看不出来，但是内存占用会减少。</p>
+<p>QuickList的特点:</p>
+<ul>
+<li>是一个节点为ZipList的双端链表</li>
+<li>节点采用ZipList，解决了传统链表的内存占用问题</li>
+<li>控制了ZipList大小，解决连续内存空间申请效率问题</li>
+<li>中间节点可以压缩，进一步节省了内存</li>
+</ul>
+<h2 id="SkipList"><a href="#SkipList" class="headerlink" title="SkipList"></a>SkipList</h2><p>SkipList是Redis中<strong>有序集合</strong>的一种实现方式，基于<strong>跳表</strong>来实现，跳表是一种<strong>有序</strong>的数据结构，可以快速的查找、插入、删除元素。SkipList是一种多层链表，每一层都是一个有序的链表，最底层的链表包含所有元素，而上层的链表包含的元素是下层链表的子集。</p>
+<p>SkipList的结构体定义如下：</p>
+<p><img src="https://gitee.com/hongtao945/imgs/raw/master/image-20250111151104786.png" srcset="/img/loading.gif" lazyload alt="SkipList的结构体"></p>
+<p>SkipList的结构如下：</p>
+<p><img src="https://gitee.com/hongtao945/imgs/raw/master/image-20250111151312545.png" srcset="/img/loading.gif" lazyload alt="SkipList的结构"></p>
+<h2 id="RedisObject"><a href="#RedisObject" class="headerlink" title="RedisObject"></a>RedisObject</h2><p>RedisObject是Redis中<strong>对象</strong>的一种实现方式，Redis中的数据都是以对象的形式存在的，对象的类型有5种：字符串、列表、哈希、集合、有序集合。RedisObject是一个结构体，结构如下：</p>
+<p><img src="https://gitee.com/hongtao945/imgs/raw/master/image-20250111151936502.png" srcset="/img/loading.gif" lazyload alt="RedisObject结构体"></p>
+<p>Redis中会根据存储的数据类型不同，选择不同的编码（redisObject结构体中encoding的值）方式，共包含11种不同类型:</p>
+<p><img src="https://gitee.com/hongtao945/imgs/raw/master/image-20250111152132748.png" srcset="/img/loading.gif" lazyload alt="encoding的取值范围"></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div></div>
+      <div>https://hongtao945.github.io/2025/01/10/Redis底层数据结构/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>John Doe</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年1月10日</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>更新于</div>
+          <div>2025年1月11日</div>
+        </div>
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2025/01/10/Redis%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B/" title="">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile"></span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2025/01/09/%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/" title="">
+                        <span class="hidden-mobile"></span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="leancloud-site-pv-container" style="display: none">
+        总访问量
+        <span id="leancloud-site-pv"></span>
+        次
+      </span>
+    
+    
+      <span id="leancloud-site-uv-container" style="display: none">
+        总访客数 
+        <span id="leancloud-site-uv"></span>
+        人
+      </span>
+    
+    
+
+  
+
+</div>
+
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  var relativeDate = function() {
+    var updatedTime = document.getElementById('updated-time');
+    if (updatedTime) {
+      var text = updatedTime.textContent;
+      var reg = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})/;
+      var matchs = text.match(reg);
+      if (matchs) {
+        var relativeTime = moment(matchs[0]).fromNow();
+        updatedTime.textContent = text.replace(reg, relativeTime);
+      }
+      updatedTime.style.display = '';
+    }
+  };
+  Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/moment.min.js', function() {
+    if (!'zh-cn'.startsWith('en')) {
+      Fluid.utils.createScript('https://lib.baomitu.com/moment.js/2.29.4/locale/zh-cn.min.js', function() {
+        relativeDate();
+      });
+    } else {
+      relativeDate();
+    }
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script  src="https://lib.baomitu.com/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js" ></script>
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script defer src="/js/leancloud.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
